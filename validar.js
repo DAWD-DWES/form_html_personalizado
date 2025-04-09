@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("registro");
+    const inputs = form.querySelectorAll("input");
 
     const mensajesError = {
         usuario: {
@@ -23,56 +24,51 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
-    const inputs = form.querySelectorAll("input");
+    function actualizarMensajePersonalizado(input) {
+        const errores = mensajesError[input.name];
+        input.setCustomValidity("");
 
-    // Validación reactiva: actualiza el mensaje personalizado en tiempo real
-    inputs.forEach(input => {
-        input.addEventListener("input", () => {
-            const errores = mensajesError[input.name];
-            input.setCustomValidity(""); // limpia primero
+        if (!errores) return;
 
-            if (!errores)
-                return;
-
-            for (const tipo in input.validity) {
-                if (input.validity[tipo] && errores?.[tipo]) {
-                    input.setCustomValidity(errores[tipo]);
-                    break;
-                }
+        for (const tipo in input.validity) {
+            if (input.validity[tipo] && errores[tipo]) {
+                input.setCustomValidity(errores[tipo]);
+                break;
             }
+        }
+    }
 
-            input.reportValidity(); // muestra mensaje actualizado si hay
+    // Aplicar a todos los inputs
+    inputs.forEach(input => {
+        // Validación en tiempo real (sin mostrar mensaje)
+        input.addEventListener("input", () => {
+            actualizarMensajePersonalizado(input);
+        });
+
+        // Mostrar mensaje al hacer foco si es inválido
+        input.addEventListener("mouseenter", () => {
+            actualizarMensajePersonalizado(input);
+            if (!input.checkValidity()) {
+                input.reportValidity();
+            }
         });
     });
 
-
+    // Validación al enviar
     form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
         let primerCampoErroneo = null;
 
         inputs.forEach(input => {
-            const errores = mensajesError[input.name];
-            input.setCustomValidity("");
+            actualizarMensajePersonalizado(input);
 
-            if (!errores)
-                return;
-
-            for (const tipo in input.validity) {
-                if (input.validity[tipo] && errores?.[tipo]) {
-                    input.setCustomValidity(errores[tipo]);
-                    if (!primerCampoErroneo)
-                        primerCampoErroneo = input;
-                    break;
-                }
+            if (!input.checkValidity() && !primerCampoErroneo) {
+                primerCampoErroneo = input;
             }
         });
 
         if (primerCampoErroneo) {
-            primerCampoErroneo.reportValidity(); // solo el primero
-        } else {
-            console.log("Formulario válido. Enviando...");
-            form.submit();
+            primerCampoErroneo.reportValidity();
+            e.preventDefault();
         }
     });
 });
