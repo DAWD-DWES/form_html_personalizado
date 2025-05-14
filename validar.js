@@ -28,7 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const errores = mensajesError[input.name];
         input.setCustomValidity("");
 
-        if (!errores) return;
+        if (!errores)
+            return;
 
         for (const tipo in input.validity) {
             if (input.validity[tipo] && errores[tipo]) {
@@ -43,6 +44,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // Validación en tiempo real (sin mostrar mensaje)
         input.addEventListener("input", () => {
             actualizarMensajePersonalizado(input);
+            if (!input.checkValidity()) {
+                input.reportValidity();
+            }
         });
 
         // Mostrar mensaje al hacer foco si es inválido
